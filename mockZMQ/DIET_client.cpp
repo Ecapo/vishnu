@@ -2,13 +2,18 @@
 // DIET_client.c
 // Implémentation du mock de la couche DIET par ZMQ dans VISHNU pour UMS
 // Le 02/05/2012
-// Auteur K. COULOMB 
+// Auteur K. COULOMB
 //
 
 #include "DIET_client.h"
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+
 
 diet_profile_t*
 diet_profile_alloc(const char* name, int IN, int INOUT, int OUT) {
@@ -38,16 +43,21 @@ diet_string_set(diet_arg_t* arg, char* value, int pers){
   return 0;
 }
 
-int 
+int
 diet_call(diet_profile_t* prof){
-  mdcli session ("tcp://localhost:5555", 0);
+  zmq::context_t ctx(1);
+  zmq::socket_t sock(ctx, ZMQ_REQ);
+  sock.connect("tcp://localhost:5555");
   std::cerr << "send: \"" << my_serialize(prof).c_str() << std::endl;
-  zmsg * request = new zmsg(my_serialize(prof).c_str());
-  zmsg * reply   = session.send(prof->name,request);
-  std::cout << "Client receive : " << reply << std::endl;
-  if (reply) {
-    delete reply;
-  }
+  std::string s1 = my_serialize(prof);
+  zmq::message_t request(s1.length()+1);
+  memcpy((void*)request.data(), s1.c_str(), s1.length()+1);
+  sock.send(request);
+
+  zmq::message_t reply;
+  sock.recv(&reply);
+  std::cout << "Client receive : " << (char*)reply.data() << std::endl;
+
   return 0;
 }
 
@@ -59,9 +69,8 @@ diet_string_get(diet_arg_t* arg, char** value, void* ptr){
   return 0;
 }
 
-int 
+int
 diet_profile_free(diet_profile_t* prof){
-  
   return 0;
 }
 
@@ -76,63 +85,35 @@ diet_parameter(diet_profile_t* prof, int pos){
 
 std::string
 my_serialize(diet_profile_t* prof){
-  std::string res = "";
-  res += std::string(prof->name);
-  res +=  "#";
+  std::stringstream res;
+  res << prof->name <<  "#";
   for (int i = 0; i<(prof->OUT)-1; ++i) {
-    res += std::string(prof->param[i]);
-    res += "#";
+    res << prof->param[i] << "#";
   }
-  res += std::string(prof->param[(prof->OUT)-1]);
-  return res;
+  res << prof->param[(prof->OUT)-1];
+  return res.str();
 }
 
 diet_profile_t*
 my_deserialize(std::string prof){
-  diet_profile_t* res = (diet_profile_t *) malloc(sizeof(diet_profile_t)*1);
+  diet_profile_t* res = NULL;
   std::vector<int> vec;
 
-  int size, prec, next;
+  std::vector<std::string> vecString;
+  boost::algorithm::split(vecString, prof, boost::algorithm::is_any_of("#"));
 
-  // Getting all the separators
-  size_t cpt = 0;
-  do{
-    cpt=prof.find_first_of("#", cpt);
-    if (cpt ==std::string::npos){
-      break;
+  if (!vecString.empty()) {
+    res = new diet_profile_t;
+    std::vector<std::string>::iterator it = vecString.begin();
+    res->name = strdup(it->c_str());
+    it++;
+    res->param = (char**)malloc(sizeof(char*) * vecString.size() - 1);
+    for (int i = 0; it != vecString.end(); it++, i++) {
+      res->param[i] = strdup(it->c_str());
     }
-    vec.push_back(cpt);
-    cpt++;
   }
-  while ((true));
 
-  // All param
-  res->param = (char **)malloc(sizeof(char *)*vec.size());
-  prec = 0;
-  
-  // Setting first
-  res->name = (char *)malloc(sizeof(char)*(vec.at(0)));
-  memcpy(res->name, prof.substr(prec, vec.at(0)).c_str(), strlen(prof.substr(prec, vec.at(0)).c_str()));
-  (res->name)[vec.at(0)]='\0';
-  prec = vec.at(0);
-
-  // For each word
-  for (unsigned int i = 0;i<vec.size();++i){
-    if (i==vec.size()-1){
-      next = prof.size();
-    } else {
-      next = vec.at(i+1);
-    }
-    size = (next-vec.at(i)); 
-    res->param[i] = (char *)malloc(sizeof(char)*(size));
-    memcpy(res->param[i], prof.substr(prec+1, size-1).c_str(), strlen(prof.substr(prec+1, size-1).c_str()));
-    (res->param[i])[size]='\0';
-    if(i < vec.size()-1)
-      prec = vec.at(i+1);
-  }
-  
   return res;
-
 }
 
 int
