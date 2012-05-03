@@ -6,6 +6,8 @@ include_directories(client api
   ${VISHNU_EXCEPTION_INCLUDE_DIR}
   ${UTILVISHNU_SOURCE_DIR}
   ${Boost_INCLUDE_DIRS}
+  ${ZMQ_INCLUDE_DIR}
+  ${MOCK_INCLUDE_DIR}
 )
 
 set(client_SRCS client/SessionProxy.cpp
@@ -41,7 +43,10 @@ target_link_libraries(vishnu-ums-client
   ${Boost_LIBRARIES}
   emf4cpp-vishnu
   vishnu-core
-  ${CMAKE_DL_LIBS})
+  ${CMAKE_DL_LIBS}
+  ${ZMQ_LIB}
+    zmq_helper
+)
 
 install(TARGETS vishnu-ums-client DESTINATION ${LIB_INSTALL_DIR})
 install(FILES ${api_HEADERS} DESTINATION ${INCLUDE_INSTALL_DIR})
@@ -90,9 +95,11 @@ if(NOT CLIENT_ONLY)
     ${LIBCRYPT_LIB}
     ${LDAP_LIBRARIES}
     ${CMAKE_DL_LIBS}
+    ${ZMQ_LIB}
+    zmq_helper
 )
 
 
-  install(TARGETS umssed DESTINATION ${SBIN_INSTALL_DIR})
+install(TARGETS umssed DESTINATION ${SBIN_INSTALL_DIR})
 endif()
 
