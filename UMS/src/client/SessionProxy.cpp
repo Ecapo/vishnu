@@ -9,6 +9,8 @@
 #include <list>
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
+
 
 #include "SessionProxy.hpp"
 #include "UserProxy.hpp"
