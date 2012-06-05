@@ -2,10 +2,10 @@
 #include <iostream>
 #include "JobOutputProxy.hpp"
 #include "utilClient.hpp"
-#include "DIET_Dagda.h"
+#include "DIET_client.h"
 #include <boost/filesystem.hpp>
 #include "utilVishnu.hpp"
-#include <omniORB4/CORBA.h>
+//#include <omniORB4/CORBA.h>
 
 namespace bfs = boost::filesystem;
 using namespace vishnu;
@@ -114,7 +114,7 @@ JobOutputProxy::getJobOutPut(const std::string& jobId) {
         jobResult.setOutputPath(moutDir+"/"+outFileName);
         jobResult.setErrorPath(moutDir+"/"+errFileName);
       }
-    } catch (CORBA::Exception & e) {//To catch CORBA exception sent by DAGDA
+    }catch(...){}/* catch (CORBA::Exception & e) {//To catch CORBA exception sent by DAGDA
       if (content.size == 2) {
         for(unsigned int i = 0; i < content.size; i++) {
           dagda_delete_data(content.elt_ids[i]);
@@ -124,8 +124,8 @@ JobOutputProxy::getJobOutPut(const std::string& jobId) {
       diet_profile_free(getJobOutPutProfile);
       throw UserException(ERRCODE_INVALID_PARAM,"CORBA Exception: "+ std::string(e._name())+
             " ("+std::string(IDContainer) + ")");
+            }*/
       }
-    }
   else {
     raiseDietMsgException("DIET call failure");
   }
@@ -237,7 +237,7 @@ JobOutputProxy::getCompletedJobsOutput() {
           dagda_delete_data(content.elt_ids[i]);
         }
       }
-    } catch (CORBA::Exception & e) {//To catch CORBA exception sent by DAGDA
+    }catch(...){}/* catch (CORBA::Exception & e) {//To catch CORBA exception sent by DAGDA
         if (content.size > 1) {
           for(unsigned int i = 0; i < content.size; i++) {
             dagda_delete_data(content.elt_ids[i]);
@@ -247,7 +247,7 @@ JobOutputProxy::getCompletedJobsOutput() {
         diet_profile_free(getCompletedJobsOutputProfile);
         throw UserException(ERRCODE_INVALID_PARAM, "CORBA Exception: "+std::string(e._name())+
         " ("+std::string(IDContainer) + ")");
-      }
+        }*/
   }
   else {
     raiseDietMsgException("DIET call failure");

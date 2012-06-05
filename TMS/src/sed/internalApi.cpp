@@ -22,8 +22,8 @@
 #include <ecore.hpp> // Ecore metamodel
 #include <ecorecpp.hpp> // EMF4CPP utils
 #include "TMS_Data.hpp"
-#include "DIET_server.h"
-#include "DIET_Dagda.h"
+#include "DIET_client.h"
+//#include "DIET_Dagda.h"
 
 #include "utilServer.hpp"
 #include "BatchServer.hpp"
@@ -43,7 +43,7 @@ using namespace std;
 using namespace vishnu;
 
 /**
- * \brief Function to solve the jobSubmit service 
+ * \brief Function to solve the jobSubmit service
  * \param pb is a structure which corresponds to the descriptor of a profile
  * \return raises an exception on error
  */
@@ -62,10 +62,10 @@ solveSubmitJob(diet_profile_t* pb) {
   int mapperkey;
   std::string cmd = "";
 
-  diet_paramstring_get(diet_parameter(pb,0), &sessionKey, NULL);
+  diet_string_get(diet_parameter(pb,0), &sessionKey, NULL);
   diet_string_get(diet_parameter(pb,1), &machineId, NULL);
   diet_string_get(diet_parameter(pb,2), &script_content, NULL);
-  diet_paramstring_get(diet_parameter(pb,3), &submitOptionsSerialized, NULL);
+  diet_string_get(diet_parameter(pb,3), &submitOptionsSerialized, NULL);
   diet_string_get(diet_parameter(pb,4), &jobSerialized, NULL);
 
   SessionServer sessionServer = SessionServer(std::string(sessionKey));
@@ -134,7 +134,7 @@ solveSubmitJob(diet_profile_t* pb) {
 }
 
 /**
- * \brief Function to solve the jobCancel service 
+ * \brief Function to solve the jobCancel service
  * \param pb is a structure which corresponds to the descriptor of a profile
  * \return raises an exception on error
  */
@@ -252,7 +252,7 @@ solveJobInfo(diet_profile_t* pb) {
 }
 
 /**
- * \brief Function to solve the getListOfQueues service 
+ * \brief Function to solve the getListOfQueues service
  * \param pb is a structure which corresponds to the descriptor of a profile
  * \return raises an exception on error
  */
@@ -272,22 +272,22 @@ solveListOfQueues(diet_profile_t* pb) {
   diet_string_get(diet_parameter(pb,0), &sessionKey, NULL);
   diet_string_get(diet_parameter(pb,1), &machineId, NULL);
   diet_string_get(diet_parameter(pb,2), &option, NULL);
-    
+
   SessionServer sessionServer = SessionServer(std::string(sessionKey));
   TMS_Data::ListQueues_ptr listQueues = NULL;
-  
-    
+
+
   ListQueuesServer queryQueues(sessionServer, machineId, ServerTMS::getInstance()->getBatchType(), std::string(option));
-  
+
   try {
     //MAPPER CREATION
     Mapper *mapper = MapperRegistry::getInstance()->getMapper(TMSMAPPERNAME);
-    
+
     mapperkey = mapper->code("vishnu_list_queues");
     mapper->code(std::string(machineId), mapperkey);
     mapper->code(std::string(option), mapperkey);
     cmd = mapper->finalize(mapperkey);
-    
+
     listQueues = queryQueues.list();
 
     ::ecorecpp::serializer::serializer _ser;
@@ -313,7 +313,7 @@ solveListOfQueues(diet_profile_t* pb) {
 }
 
 /**
- * \brief Function to solve the jobOutPutGetResult service 
+ * \brief Function to solve the jobOutPutGetResult service
  * \param pb is a structure which corresponds to the descriptor of a profile
  * \return raises an exception on error
  */
@@ -402,7 +402,7 @@ solveJobOutPutGetResult(diet_profile_t* pb) {
 }
 
 /**
- * \brief Function to solve the generic query service 
+ * \brief Function to solve the generic query service
  * \param pb is a structure which corresponds to the descriptor of a profile
  * \return raises an exception on error
  */
@@ -473,7 +473,7 @@ solveGenerique(diet_profile_t* pb) {
 }
 
 /**
- * \brief Function to solve the getListOfJobs service 
+ * \brief Function to solve the getListOfJobs service
  * \param pb is a structure which corresponds to the descriptor of a profile
  * \return raises an exception on error
  */
@@ -483,7 +483,7 @@ solveGetListOfJobs(diet_profile_t* pb) {
 }
 
 /**
- * \brief Function to solve the getJobsProgression service 
+ * \brief Function to solve the getJobsProgression service
  * \param pb is a structure which corresponds to the descriptor of a profile
  * \return raises an exception on error
  */
@@ -493,7 +493,7 @@ solveGetListOfJobsProgression(diet_profile_t* pb) {
 }
 
 /**
- * \brief Function to solve the jobOutputGetCompletedJobs service 
+ * \brief Function to solve the jobOutputGetCompletedJobs service
  * \param pb is a structure which corresponds to the descriptor of a profile
  * \return raises an exception on error
  */
