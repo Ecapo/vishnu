@@ -8,6 +8,7 @@
 #include "BatchFactory.hpp"
 #include "SharedLibrary.hh"
 
+#include <boost/format.hpp>
 #include <iostream>
 
 static int created=0;
@@ -20,6 +21,25 @@ BatchFactory::BatchFactory() {
 }
 
 
+BatchServer*
+loadPluginBatch(const char *name) {
+  dadi::SharedLibrary *plugin(NULL);
+  void *factory(NULL);
+  BatchServer *instance(NULL);
+
+  std::string libname = boost::str(boost::format("%1%%2%%3%")
+                                   % dadi::SharedLibrary::prefix()
+                                   % name
+                                   % dadi::SharedLibrary::suffix());
+
+  plugin = new dadi::SharedLibrary(libname);
+  if (plugin->isLoaded()) {
+    factory = plugin->symbol("create_plugin_instance");
+    ((int (*)(void **))(factory))((void**) &instance);
+  }
+
+}
+
 
 
 /**
@@ -29,45 +49,23 @@ BatchFactory::BatchFactory() {
  */
 BatchServer*
 BatchFactory::getBatchServerInstance(BatchType batchType) {
-  void *factory(NULL);
   BatchServer *instance(NULL);
-  dadi::SharedLibrary *plugin(NULL);
 
   switch (batchType) {
     case TORQUE:
-      plugin = new dadi::SharedLibrary("tms-server-torque");
-      if (plugin->isLoaded()) {
-        factory = plugin->symbol("create_plugin_instance");
-        ((int (*)(void **))(factory))((void**) &instance);
-      }
+      instance = loadPluginBatch("vishnu-tms-torque");
       break;
     case LOADLEVELER:
-      plugin = new dadi::SharedLibrary("tms-server-loadleveler");
-      if (plugin->isLoaded()) {
-        factory = plugin->symbol("create_plugin_instance");
-        ((int (*)(void **))(factory))((void**) &instance);
-      }
+      instance = loadPluginBatch("vishnu-tms-loadleveler");
       break;
     case SLURM:
-      plugin = new dadi::SharedLibrary("tms-server-slurm");
-      if (plugin->isLoaded()) {
-        factory = plugin->symbol("create_plugin_instance");
-        ((int (*)(void **))(factory))((void**) &instance);
-      }
+      instance = loadPluginBatch("vishnu-tms-slurm");
       break;
     case LSF:
-      plugin = new dadi::SharedLibrary("tms-server-lsf");
-      if (plugin->isLoaded()) {
-        factory = plugin->symbol("create_plugin_instance");
-        ((int (*)(void **))(factory))((void**) &instance);
-      }
+      instance = loadPluginBatch("vishnu-tms-lsf");
       break;
     case SGE:
-      plugin = new dadi::SharedLibrary("tms-server-sge");
-      if (plugin->isLoaded()) {
-        factory = plugin->symbol("create_plugin_instance");
-        ((int (*)(void **))(factory))((void**) &instance);
-      }
+      instance = loadPluginBatch("vishnu-tms-sge");
       break;
     default:
       break;
